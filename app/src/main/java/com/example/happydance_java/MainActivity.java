@@ -1,13 +1,18 @@
 package com.example.happydance_java;
 
-import androidx.annotation.LongDef;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -17,12 +22,15 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
+import com.example.happydance_java.databinding.ActivityMainBinding;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
-import javax.security.auth.login.LoginException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -31,11 +39,20 @@ public class MainActivity extends AppCompatActivity {
     private AMap aMap;
     private AMapLocationClient mLocationClient;//声明AMapLocationClient对象
     private AMapLocationListener mLocationListenetr;//初始化定位
+    private MainViewModel viewModel;
+
+    private double mLatitude = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        viewModel = new MainViewModel();
+        binding.setMainInfo(viewModel);
+        binding.setLifecycleOwner(this);
+
         //获取地图控件引用
         mMapView = findViewById(R.id.map);
         //在activity执行onCreated的时候执行onCreate方法
@@ -44,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         if (aMap == null) {
             aMap = mMapView.getMap();
         }
+
 
         //构建定位蓝点的样式
         myLocationStyle = buildMyLocationStyle();
@@ -164,6 +182,9 @@ public class MainActivity extends AppCompatActivity {
                                 + "gpsAccuracyStatus: " + gpsAccuracyStatus + "\n"
                                 + "timeStr: " + timeStr + "\n"
                         );
+
+//                        mLatitude=viewModel.getPosData().getValue().getLatitude()+1;
+                        viewModel.getPosData().setValue(new PosBean(latitude, longitude));
                     } else {
                         //定位失败时可以通过ErrCode来确定失败的原因，errInfo是错误信息
                         Log.e("AmapError", "location Error, ErrCode:"
@@ -201,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
         //且setOnceLocation(boolean)设置为true，反之不会，默认为false
         mLocationOption.setOnceLocationLatest(true);
         //自定义连续定位，设置时间间隔，单位毫秒，默认为2000ms，最低为1000ms
-        mLocationOption.setInterval(1000);
+        mLocationOption.setInterval(10000);
         //设置是否返回地址信息（默认返回地址信息）
         mLocationOption.setNeedAddress(true);
         //设置是否允许模拟位置，默认为true，允许模拟位置
@@ -236,43 +257,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /**
-     * 定位的监听回调
-     */
-    private void initLocationListener() {
-//初始化定位
-        AMapLocationClient mLocationClient = new AMapLocationClient(getApplicationContext());
-        //声明定位回调监听器
-        AMapLocationListener mLocationListener = new AMapLocationListener() {
-            @Override
-            public void onLocationChanged(AMapLocation aMapLocation) {
-                Log.d(TAG, "onLocationChanged: ********************************");
-                Log.d(TAG, "aMapLocation:" + aMapLocation.getAddress());
-                //获取纬度
-                Log.d(TAG, "aMapLocation:" + aMapLocation.getLatitude());
-                Log.d(TAG, "aMapLocation:" + aMapLocation.getLongitude());
-                Log.d(TAG, "aMapLocation==null:" + (aMapLocation == null));
-                if (aMapLocation != null) {
-                    if (aMapLocation.getErrorCode() == 0) {
-//可在其中解析amapLocation获取相应内容。
-                        Log.d(TAG, "aMapLocation:" + aMapLocation.getPoiName());
-//                        current_latitude = aMapLocation.getLatitude();
-//                        current_longitude = aMapLocation.getLongitude();
-                    } else {
-                        //定位失败时，可通过ErrCode（错误码）信息来确定失败的原因，errInfo是错误信息，详见错误码表。
-                        Log.d(TAG, "location Error, ErrCode:"
-                                + aMapLocation.getErrorCode() + ", errInfo:"
-                                + aMapLocation.getErrorInfo());
-                    }
-                }
-            }
-        };
-        //设置定位回调监听
-        mLocationClient.setLocationListener(mLocationListener);
-        //启动定位
-        mLocationClient.startLocation();
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -296,5 +280,35 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
         mMapView.onSaveInstanceState(outState);
+    }
+
+    public class MainViewModel extends ViewModel {
+        private MutableLiveData<PosBean> posData = new MutableLiveData<>();
+
+        public MutableLiveData<PosBean> getPosData() {
+            return posData;
+        }
+
+        public MainViewModel() {
+            posData.setValue(new PosBean(31.281766, 121.595774));
+        }
+
+
+        public void SignMap() {
+            double latitude = posData.getValue().getLatitude();
+            double longitude = posData.getValue().getLongitude();
+
+
+            ArrayList<MarkerOptions> markerList = new ArrayList<>();
+
+            LatLng latLng = new LatLng(latitude , longitude);
+            markerList.add(new MarkerOptions().position(latLng).title("家").snippet("DefaultMarker"));
+
+            /**
+             * 参数1 MarkList
+             * 参数2 是否在绘制标记后自适应地图区域到所有标记
+             */
+            aMap.addMarkers(markerList,false);
+        }
     }
 }
