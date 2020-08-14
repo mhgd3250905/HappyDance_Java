@@ -6,7 +6,10 @@
     <data>
         <variable
             name="mainInfo"
-            type="com.example.happydance_java.MainActivity.MainViewModel" />
+            type="com.example.happydance_java.model.viewmodel.MainViewModel" />
+        <variable
+            name="listener"
+            type="com.example.happydance_java.MainActivity.EventListener" />
     </data>
 
     <RelativeLayout
@@ -28,7 +31,7 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:onClick="@{()->mainInfo.SignMap()}"
+                android:onClick="@{()->listener.SignMap()}"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
                 android:text="标记"
