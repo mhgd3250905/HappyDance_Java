@@ -66,9 +66,10 @@ public class MainActivity extends AppCompatActivity {
         getLifecycle().addObserver(new LocationUtils(getApplicationContext(), mMapView, new LocationUtils.OnMapEventListener() {
             @Override
             public void locationChecked(AMapLocation aMapLocation) {
-                double altitude = aMapLocation.getLatitude();
+                double latitude = aMapLocation.getLatitude();
                 double longitude = aMapLocation.getLongitude();
-                viewModel.getPosData().setValue(new PosBean(altitude, longitude));
+                Log.d(TAG, "locationChecked: latitude = " + latitude + ", longitude = " + longitude);
+                viewModel.getPosData().setValue(new PosBean(latitude, longitude));
             }
 
             @Override

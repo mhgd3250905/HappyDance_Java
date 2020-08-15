@@ -149,7 +149,7 @@ public class LocationUtils implements LifecycleObserver {
          * LOCATION_TYPE_FOLLOW_NO_CENTER = 6; //连续定位，蓝点不会移动到地图中心点，并且蓝点会跟随设备移动
          * LOCATION_TYPE_MAP_ROTATE_NO_CENTER = 7; //连续定位，蓝点不会移动到地图中心点，地图依照设备方向旋转，并且蓝点会跟随设备移动
          */
-        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE);
+        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_FOLLOW);
         //控制是否显示定位蓝点，注意是在5.1.0之后支持
         myLocationStyle.showMyLocation(true);
         //自定义定位蓝点的图标
@@ -269,7 +269,7 @@ public class LocationUtils implements LifecycleObserver {
         //且setOnceLocation(boolean)设置为true，反之不会，默认为false
         mLocationOption.setOnceLocationLatest(true);
         //自定义连续定位，设置时间间隔，单位毫秒，默认为2000ms，最低为1000ms
-        mLocationOption.setInterval(10000);
+        mLocationOption.setInterval(5000);
         //设置是否返回地址信息（默认返回地址信息）
         mLocationOption.setNeedAddress(true);
         //设置是否允许模拟位置，默认为true，允许模拟位置
