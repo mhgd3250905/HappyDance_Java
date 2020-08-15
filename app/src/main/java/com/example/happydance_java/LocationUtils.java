@@ -3,7 +3,6 @@ package com.example.happydance_java;
 import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
-import android.util.Log;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -13,11 +12,9 @@ import com.amap.api.maps.AMap;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MyLocationStyle;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
@@ -32,24 +29,34 @@ public class LocationUtils implements LifecycleObserver {
     private AMapLocationClient mLocationClient;//声明AMapLocationClient对象
     private AMapLocationListener mLocationListenetr;//初始化定位
     private Context context;
-    private OnLocationCheckListener onLocationCheckListener;
+    private OnMapEventListener onMapEventListener;
 
-    public interface OnLocationCheckListener{
+    public interface OnMapEventListener {
         void locationChecked(AMapLocation aMapLocation);
+
         void locationCheckFailed(AMapLocation aMapLocation);
+
+        void onClick(LatLng latLng);
+
+        void onLongClick(LatLng latLng);
+
+        void onMarkerClick(Marker marker);
     }
 
-    public LocationUtils(Context context,@NonNull MapView mMapView,OnLocationCheckListener listener) {
-        this.context=context;
+    public LocationUtils(Context context, @NonNull MapView mMapView, OnMapEventListener listener) {
+        this.context = context;
         this.mMapView = mMapView;
-        this.onLocationCheckListener=listener;
+        this.onMapEventListener = listener;
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    public void initMap(){
+    public void initMap() {
         if (aMap == null) {
             aMap = mMapView.getMap();
         }
+
+        //初始化地图事件
+        initMapEvent();
 
         //构建定位蓝点的样式
         myLocationStyle = buildMyLocationStyle();
@@ -73,7 +80,7 @@ public class LocationUtils implements LifecycleObserver {
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    public void resume(){
+    public void resume() {
         mMapView.onResume();
     }
 
@@ -85,6 +92,40 @@ public class LocationUtils implements LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     protected void destroy() {
         mMapView.onDestroy();
+    }
+
+
+    /**
+     * 初始化地图事件
+     */
+    private void initMapEvent() {
+        aMap.setOnMapClickListener(new AMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if (onMapEventListener != null) {
+                    onMapEventListener.onClick(latLng);
+                }
+            }
+        });
+
+        aMap.setOnMapLongClickListener(new AMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                if (onMapEventListener != null) {
+                    onMapEventListener.onLongClick(latLng);
+                }
+            }
+        });
+
+        aMap.setOnMarkerClickListener(new AMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if (onMapEventListener != null) {
+                    onMapEventListener.onMarkerClick(marker);
+                }
+                return true;
+            }
+        });
     }
 
     /**
@@ -108,7 +149,7 @@ public class LocationUtils implements LifecycleObserver {
          * LOCATION_TYPE_FOLLOW_NO_CENTER = 6; //连续定位，蓝点不会移动到地图中心点，并且蓝点会跟随设备移动
          * LOCATION_TYPE_MAP_ROTATE_NO_CENTER = 7; //连续定位，蓝点不会移动到地图中心点，地图依照设备方向旋转，并且蓝点会跟随设备移动
          */
-        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
+        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE);
         //控制是否显示定位蓝点，注意是在5.1.0之后支持
         myLocationStyle.showMyLocation(true);
         //自定义定位蓝点的图标
@@ -136,61 +177,61 @@ public class LocationUtils implements LifecycleObserver {
                 //获取定位结果
                 if (aMapLocation != null) {
                     if (aMapLocation.getErrorCode() == 0) {
-                        if (onLocationCheckListener!=null){
-                            onLocationCheckListener.locationChecked(aMapLocation);
+                        if (onMapEventListener != null) {
+                            onMapEventListener.locationChecked(aMapLocation);
                         }
-                        //解析定位信息
-                        int locationType = aMapLocation.getLocationType();//获取定位来源，如网络定位
-                        double latitude = aMapLocation.getLatitude();//获取维度
-                        double longitude = aMapLocation.getLongitude();//获取经度
-                        float accuracy = aMapLocation.getAccuracy();//获取精度信息
-                        /*
-                         * 获取地址
-                         * 如果option中设置isNeedAddress为false，则没有此结果
-                         * 网络定位结果中会有地址信息，GPS定位不返回地址信息。
-                         */
-                        String address = aMapLocation.getAddress();
-                        String country = aMapLocation.getCountry();//国家信息
-                        String province = aMapLocation.getProvince();//省份信息
-                        String city = aMapLocation.getCity();//城市信息
-                        String district = aMapLocation.getDistrict();//城区信息
-                        String street = aMapLocation.getStreet();//街道信息
-                        String streetNum = aMapLocation.getStreetNum();//街道门牌号信息
-                        String cityCode = aMapLocation.getCityCode();//城市编码
-                        String adCode = aMapLocation.getAdCode();//地区编码
-                        String aoiName = aMapLocation.getAoiName();//获取当前定位的AOI信息
-                        String buildingId = aMapLocation.getBuildingId();//获取当前室内定位的建筑物Id
-                        String floor = aMapLocation.getFloor();//获取当前室内定位的楼层
-                        int gpsAccuracyStatus = aMapLocation.getGpsAccuracyStatus();//获取当前的GPS状态
-                        //获取定位时间
-                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        Date date = new Date(aMapLocation.getTime());
-                        String timeStr = df.format(date);
-                        Log.d(TAG, "****************************************");
-                        Log.d(TAG, "onLocationChanged: \n"
-                                + "locationType: " + locationType + "\n"
-                                + "latitude: " + latitude + "\n"
-                                + "longitude: " + longitude + "\n"
-                                + "accuracy: " + accuracy + "\n"
-                                + "address: " + address + "\n"
-                                + "country: " + country + "\n"
-                                + "province: " + province + "\n"
-                                + "city: " + city + "\n"
-                                + "district: " + district + "\n"
-                                + "street: " + street + "\n"
-                                + "streetNum: " + streetNum + "\n"
-                                + "cityCode: " + cityCode + "\n"
-                                + "adCode: " + adCode + "\n"
-                                + "aoiName: " + aoiName + "\n"
-                                + "buildingId: " + buildingId + "\n"
-                                + "floor: " + floor + "\n"
-                                + "gpsAccuracyStatus: " + gpsAccuracyStatus + "\n"
-                                + "timeStr: " + timeStr + "\n"
-                        );
+//                        //解析定位信息
+//                        int locationType = aMapLocation.getLocationType();//获取定位来源，如网络定位
+//                        double latitude = aMapLocation.getLatitude();//获取维度
+//                        double longitude = aMapLocation.getLongitude();//获取经度
+//                        float accuracy = aMapLocation.getAccuracy();//获取精度信息
+//                        /*
+//                         * 获取地址
+//                         * 如果option中设置isNeedAddress为false，则没有此结果
+//                         * 网络定位结果中会有地址信息，GPS定位不返回地址信息。
+//                         */
+//                        String address = aMapLocation.getAddress();
+//                        String country = aMapLocation.getCountry();//国家信息
+//                        String province = aMapLocation.getProvince();//省份信息
+//                        String city = aMapLocation.getCity();//城市信息
+//                        String district = aMapLocation.getDistrict();//城区信息
+//                        String street = aMapLocation.getStreet();//街道信息
+//                        String streetNum = aMapLocation.getStreetNum();//街道门牌号信息
+//                        String cityCode = aMapLocation.getCityCode();//城市编码
+//                        String adCode = aMapLocation.getAdCode();//地区编码
+//                        String aoiName = aMapLocation.getAoiName();//获取当前定位的AOI信息
+//                        String buildingId = aMapLocation.getBuildingId();//获取当前室内定位的建筑物Id
+//                        String floor = aMapLocation.getFloor();//获取当前室内定位的楼层
+//                        int gpsAccuracyStatus = aMapLocation.getGpsAccuracyStatus();//获取当前的GPS状态
+//                        //获取定位时间
+//                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                        Date date = new Date(aMapLocation.getTime());
+//                        String timeStr = df.format(date);
+//                        Log.d(TAG, "****************************************");
+//                        Log.d(TAG, "onLocationChanged: \n"
+//                                + "locationType: " + locationType + "\n"
+//                                + "latitude: " + latitude + "\n"
+//                                + "longitude: " + longitude + "\n"
+//                                + "accuracy: " + accuracy + "\n"
+//                                + "address: " + address + "\n"
+//                                + "country: " + country + "\n"
+//                                + "province: " + province + "\n"
+//                                + "city: " + city + "\n"
+//                                + "district: " + district + "\n"
+//                                + "street: " + street + "\n"
+//                                + "streetNum: " + streetNum + "\n"
+//                                + "cityCode: " + cityCode + "\n"
+//                                + "adCode: " + adCode + "\n"
+//                                + "aoiName: " + aoiName + "\n"
+//                                + "buildingId: " + buildingId + "\n"
+//                                + "floor: " + floor + "\n"
+//                                + "gpsAccuracyStatus: " + gpsAccuracyStatus + "\n"
+//                                + "timeStr: " + timeStr + "\n"
+//                        );
 
                     } else {
-                        if (onLocationCheckListener!=null){
-                            onLocationCheckListener.locationCheckFailed(aMapLocation);
+                        if (onMapEventListener != null) {
+                            onMapEventListener.locationCheckFailed(aMapLocation);
                         }
 //                        //定位失败时可以通过ErrCode来确定失败的原因，errInfo是错误信息
 //                        Log.e("AmapError", "location Error, ErrCode:"

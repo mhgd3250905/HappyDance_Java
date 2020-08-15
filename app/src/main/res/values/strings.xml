@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">HappyDance_Java</string>
+    <string name="marker_test">&#xe6bf;</string>
 </resources>

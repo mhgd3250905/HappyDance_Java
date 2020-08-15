@@ -2,49 +2,86 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-
     <data>
+
         <variable
-            name="mainInfo"
-            type="com.example.happydance_java.model.viewmodel.MainViewModel" />
+            name="mapInfo"
+            type="com.example.happydance_java.model.viewmodel.MapViewModel" />
+
         <variable
             name="listener"
-            type="com.example.happydance_java.MainActivity.EventListener" />
+            type="com.example.happydance_java.view.MainActivity.EventListener" />
     </data>
-
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        android:orientation="vertical"
+        tools:context=".view.MainActivity">
+
+        <TextView
+            android:id="@id/tv_latlng"
+            android:gravity="center"
+            android:background="#ffffff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:textSize="20sp"
+            android:text="@{mapInfo.posData.toString()}"/>
+
+        <com.example.happydance_java.view.customize.FontIconView
+            android:gravity="center"
+            android:background="#ffffff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:textSize="40sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/marker_test"/>
 
         <com.amap.api.maps.MapView
 
             android:id="@+id/map"
 
             android:layout_width="match_parent"
+            android:layout_height="0dp"
 
-            android:layout_height="match_parent" />
+            android:layout_weight="1" />
 
         <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <Button
-                android:onClick="@{()->listener.SignMap()}"
+                android:id="@id/tv_sign"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
-                android:text="标记"
+                android:onClick="@{()->listener.toggleSignEnbale()}"
+                android:text="@{listener.getTitle(mapInfo.signEnable)}" />
+
+            <Button
                 android:layout_width="0dp"
-                android:layout_height="wrap_content" />
-            <TextView
+                android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
-                android:text="@{mainInfo.posData.toString()}"
+                android:onClick="@{()->listener.signLine()}"
+                android:text="标线" />
+
+            <Button
                 android:layout_width="0dp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:onClick="@{()->listener.signSurface()}"
+                android:text="标面" />
+
+            />
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
+
+
 </layout>

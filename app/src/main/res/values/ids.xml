@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="tv_test" type="id" />
+    <item name="tv_sign" type="id" />
+    <item name="tv_latlng" type="id" />
 </resources>
