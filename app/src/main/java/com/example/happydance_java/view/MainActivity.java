@@ -2,14 +2,15 @@ package com.example.happydance_java.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.room.Room;
 
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
-import android.util.Size;
 import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
@@ -27,11 +28,13 @@ import com.example.happydance_java.LocationUtils;
 import com.example.happydance_java.PosBean;
 import com.example.happydance_java.R;
 import com.example.happydance_java.databinding.ActivityMainBinding;
+import com.example.happydance_java.db.AppDataBase;
+import com.example.happydance_java.db.Position;
 import com.example.happydance_java.model.viewmodel.MapViewModel;
-import com.example.happydance_java.utils.SizeUtils;
 import com.example.happydance_java.view.customize.FontIconView;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private AMap aMap;
     private EventListener eventListener;
     private ActivityMainBinding binding;
+    private List<Position> positionList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +52,15 @@ public class MainActivity extends AppCompatActivity {
 
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        viewModel = new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(MapViewModel.class);
+        viewModel = new ViewModelProvider(this, new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(MapViewModel.class);
         binding.setMapInfo(viewModel);
-        eventListener = new EventListener();
+        viewModel.getPositionsLive().observe(this, new Observer<List<Position>>() {
+            @Override
+            public void onChanged(List<Position> positions) {
+                positionList = positions;
+            }
+        });
+        eventListener = new EventListener();/**/
         binding.setListener(eventListener);
         binding.setLifecycleOwner(this);
 
@@ -105,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
     public class EventListener {
 
+
         public void toggleSignEnbale() {
             viewModel.toggleSignEnbale();
         }
@@ -143,17 +154,30 @@ public class MainActivity extends AppCompatActivity {
 
             //添加标记点到列表中
             viewModel.getLatlngList().getValue().add(latLng);
+            viewModel.insertPositions(new Position(latLng.latitude, latLng.longitude, new Date()));
         }
 
         /**
          * 绘制线
          */
         public void signLine() {
-            List<LatLng> latLngs = viewModel.getLatlngList().getValue();
+            List<LatLng> latLngs = new ArrayList<>();
+            List<Position> positions = new ArrayList<>();
+            if (positionList!=null){
+                positions.addAll(positionList);
+            }
+            for (int i = 0; i < positions.size(); i++) {
+                latLngs.add(new LatLng(positions.get(i).latitude, positions.get(i).longitudu));
+            }
+//            List<LatLng> latLngs = viewModel.getLatlngList().getValue();
             aMap.addPolyline(new PolylineOptions()
                     .addAll(latLngs)
                     .width(10)
                     .color(Color.GREEN));
+        }
+
+        public void cleanDb(){
+            viewModel.deleteAllPositions();
         }
 
         /**
