@@ -1,2 +1,3 @@
 rootProject.name='HappyDance_Java'
 include ':app'
+include ':permissionsutils'

@@ -7,6 +7,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.room.Room;
 
+import android.Manifest;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.PersistableBundle;
@@ -32,6 +33,8 @@ import com.example.happydance_java.db.AppDataBase;
 import com.example.happydance_java.db.Position;
 import com.example.happydance_java.model.viewmodel.MapViewModel;
 import com.example.happydance_java.view.customize.FontIconView;
+import com.example.permissionsutils.LivePermission;
+import com.example.permissionsutils.PermissionResult;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,6 +67,19 @@ public class MainActivity extends AppCompatActivity {
         binding.setListener(eventListener);
         binding.setLifecycleOwner(this);
 
+        new LivePermission(this).requestArray(new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+        }).observe(this, new Observer<PermissionResult>() {
+            @Override
+            public void onChanged(PermissionResult permissionResult) {
+                Log.d(TAG, "onChanged() called with: permissionResult = [" + permissionResult + "]");
+            }
+        });
 
         //获取地图控件引用
         mMapView = binding.map;
@@ -114,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public class EventListener {
-
 
         public void toggleSignEnbale() {
             viewModel.toggleSignEnbale();
