@@ -3,6 +3,7 @@ package com.example.happydance_java;
 import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
+import android.util.Log;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -58,25 +59,10 @@ public class LocationUtils implements LifecycleObserver {
         //初始化地图事件
         initMapEvent();
 
-        //构建定位蓝点的样式
-        myLocationStyle = buildMyLocationStyle();
-
-        //设置默认定位按钮是否显示，非必需设置。
-        aMap.getUiSettings().setMyLocationButtonEnabled(true);
-        //设置定位蓝点
-        aMap.setMyLocationStyle(myLocationStyle);
-        //设置为true表示启动显示定位蓝点，false表示隐藏定位蓝点并不进行定位，默认为false
-        aMap.setMyLocationEnabled(true);
-        //监听定位变化
-        aMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
-            @Override
-            public void onMyLocationChange(Location location) {
-//                Log.d(TAG, "onMyLocationChange() called with: location = [" + location + "]");
-            }
-        });
+        setupArrowLocationAndStart();
 
         //初始化定位
-        initLocationClient();
+        setupLocationAndStart();
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
@@ -137,7 +123,7 @@ public class LocationUtils implements LifecycleObserver {
         //初始化定位蓝点的样式
         MyLocationStyle myLocationStyle = new MyLocationStyle();
         //设置持续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效
-        myLocationStyle.interval(2000);
+        myLocationStyle.interval(10000);
         /**
          * 设置定位类型
          * LOCATION_TYPE_SHOW = 0; //只定位一次
@@ -167,9 +153,31 @@ public class LocationUtils implements LifecycleObserver {
     }
 
     /**
-     * 初始化定位
+     * 初始化箭头定位监听并开始定位
      */
-    private void initLocationClient() {
+    private void setupArrowLocationAndStart(){
+        //构建定位蓝点的样式
+        myLocationStyle = buildMyLocationStyle();
+
+        //设置默认定位按钮是否显示，非必需设置。
+        aMap.getUiSettings().setMyLocationButtonEnabled(true);
+        //设置定位蓝点
+        aMap.setMyLocationStyle(myLocationStyle);
+        //设置为true表示启动显示定位蓝点，false表示隐藏定位蓝点并不进行定位，默认为false
+        aMap.setMyLocationEnabled(false);
+        //监听定位变化
+        aMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                Log.d(TAG, "onMyLocationChange() called with: location = [" + location + "]");
+            }
+        });
+    }
+
+    /**
+     * 初始化定位监听并开始定位
+     */
+    private void setupLocationAndStart() {
         //声明定位回调监听器
         mLocationListenetr = new AMapLocationListener() {
             @Override

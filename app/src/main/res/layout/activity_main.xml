@@ -69,6 +69,15 @@
                 android:onClick="@{()->listener.signLine()}"
                 android:text="标线" />
 
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:onClick="@{()->listener.calculateDistance()}"
+                android:text="测距" />
+
             <Button
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

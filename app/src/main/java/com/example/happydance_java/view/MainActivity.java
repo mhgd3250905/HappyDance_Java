@@ -25,6 +25,11 @@ import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.PolylineOptions;
+import com.amap.api.services.core.AMapException;
+import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.route.DistanceItem;
+import com.amap.api.services.route.DistanceResult;
+import com.amap.api.services.route.DistanceSearch;
 import com.example.happydance_java.LocationUtils;
 import com.example.happydance_java.PosBean;
 import com.example.happydance_java.R;
@@ -67,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         binding.setListener(eventListener);
         binding.setLifecycleOwner(this);
 
+        //请求权限
         new LivePermission(this).requestArray(new String[]{
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -178,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
         public void signLine() {
             List<LatLng> latLngs = new ArrayList<>();
             List<Position> positions = new ArrayList<>();
-            if (positionList!=null){
+            if (positionList != null) {
                 positions.addAll(positionList);
             }
             for (int i = 0; i < positions.size(); i++) {
@@ -191,7 +197,52 @@ public class MainActivity extends AppCompatActivity {
                     .color(Color.GREEN));
         }
 
-        public void cleanDb(){
+
+        /**
+         * 测量距离
+         */
+        public void calculateDistance() {
+            List<Position> positions = new ArrayList<>();
+            if (positionList != null) {
+                positions.addAll(positionList);
+            }
+            if (positions.size() < 2) {
+                return;
+            }
+
+            DistanceSearch distanceSearch = new DistanceSearch(MainActivity.this);
+            distanceSearch.setDistanceSearchListener(new DistanceSearch.OnDistanceSearchListener() {
+                @Override
+                public void onDistanceSearched(DistanceResult distanceResult, int i) {
+                    Log.d(TAG, "onDistanceSearched() called with: distanceResult = [" + distanceResult + "], i = [" + i + "]");
+                    List<DistanceItem> distanceItems = distanceResult.getDistanceResults();
+                    for (DistanceItem distanceItem : distanceItems) {
+                        Log.d(TAG, distanceItem.toString());
+                    }
+                }
+            });
+
+            List<LatLonPoint> latLonPoints = new ArrayList<>();
+
+            for (int i = 0; i < positions.size(); i++) {
+                latLonPoints.add(new LatLonPoint(positions.get(i).latitude, positions.get(i).longitudu));
+            }
+
+            DistanceSearch.DistanceQuery distanceQuery = new DistanceSearch.DistanceQuery();
+            //设置多个起点
+            distanceQuery.setOrigins(latLonPoints);
+            //设置终点
+            distanceQuery.setDestination(latLonPoints.get(latLonPoints.size() - 1));
+            /*
+             * 设置测量方式
+             * 直线模式 -> DistanceSearch.TYPE_DISTANCE
+             * 驾车模式 -> DistanceSearch.TYPE_DRIVING_DISTANCE
+             */
+            distanceQuery.setType(DistanceSearch.TYPE_DISTANCE);
+            distanceSearch.calculateRouteDistanceAsyn(distanceQuery);
+        }
+
+        public void cleanDb() {
             viewModel.deleteAllPositions();
         }
 
