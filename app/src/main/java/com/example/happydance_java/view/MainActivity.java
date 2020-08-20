@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
@@ -290,6 +291,48 @@ public class MainActivity extends AppCompatActivity {
          */
         public void clickMarker(Marker marker) {
             Toast.makeText(MainActivity.this, marker.getSnippet(), Toast.LENGTH_SHORT).show();
+        }
+
+        public void calculatrLineLength() {
+            if (positionList.size() < 2) {
+                Toast.makeText(MainActivity.this, "请至少设置两个坐标！", Toast.LENGTH_SHORT).show();
+            }
+
+            List<LatLng> latLngs = new ArrayList<>();
+            List<Position> positions = new ArrayList<>();
+            if (positionList != null) {
+                positions.addAll(positionList);
+            }
+            for (int i = 0; i < positions.size(); i++) {
+                latLngs.add(new LatLng(positions.get(i).latitude, positions.get(i).longitudu));
+            }
+
+            float length = 0f;
+            LatLng temp = latLngs.get(0);
+            for (int i = 1; i < latLngs.size(); i++) {
+                LatLng target = latLngs.get(i);
+                length += AMapUtils.calculateLineDistance(temp, target);
+                temp = target;
+            }
+
+            Toast.makeText(MainActivity.this, "起点到终点之间的距离为：" + length + "m", Toast.LENGTH_SHORT).show();
+        }
+
+        public void calculatrArea() {
+            if (positionList.size() != 2) {
+                Toast.makeText(MainActivity.this, "仅能设置两个坐标！", Toast.LENGTH_SHORT).show();
+            }
+            List<LatLng> latLngs = new ArrayList<>();
+            List<Position> positions = new ArrayList<>();
+            if (positionList != null) {
+                positions.addAll(positionList);
+            }
+            for (int i = 0; i < positions.size(); i++) {
+                latLngs.add(new LatLng(positions.get(i).latitude, positions.get(i).longitudu));
+            }
+            float area=AMapUtils.calculateArea(latLngs.get(0),latLngs.get(1));
+
+            Toast.makeText(MainActivity.this, "两个坐标构成的矩形面积为：" + area + "m*m", Toast.LENGTH_SHORT).show();
         }
     }
 }

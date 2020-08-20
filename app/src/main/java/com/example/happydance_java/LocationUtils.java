@@ -135,7 +135,7 @@ public class LocationUtils implements LifecycleObserver {
          * LOCATION_TYPE_FOLLOW_NO_CENTER = 6; //连续定位，蓝点不会移动到地图中心点，并且蓝点会跟随设备移动
          * LOCATION_TYPE_MAP_ROTATE_NO_CENTER = 7; //连续定位，蓝点不会移动到地图中心点，地图依照设备方向旋转，并且蓝点会跟随设备移动
          */
-        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_FOLLOW);
+        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE);
         //控制是否显示定位蓝点，注意是在5.1.0之后支持
         myLocationStyle.showMyLocation(true);
         //自定义定位蓝点的图标
@@ -164,7 +164,7 @@ public class LocationUtils implements LifecycleObserver {
         //设置定位蓝点
         aMap.setMyLocationStyle(myLocationStyle);
         //设置为true表示启动显示定位蓝点，false表示隐藏定位蓝点并不进行定位，默认为false
-        aMap.setMyLocationEnabled(false);
+        aMap.setMyLocationEnabled(true);
         //监听定位变化
         aMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
             @Override
